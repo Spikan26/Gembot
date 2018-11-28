@@ -6,7 +6,7 @@ var bot = new Discord.Client();
 const SQLite = require("better-sqlite3");
 const sql = new SQLite('./scores.sqlite');
 
-const TOKEN = "NTE3MDkwNDY1MjA0NTM1MzEy.Dt9Jsw.KD4VyFpRfKNkz8aOVXDX2DqoONI";
+
 const PREFIX = "*";
 
 
@@ -94,4 +94,4 @@ bot.on("message", function(message){
 		
 })
 
-bot.login(TOKEN)
+bot.login(process.env.BOT_TOKEN);
