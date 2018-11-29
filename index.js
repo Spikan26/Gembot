@@ -1,3 +1,5 @@
+//TODO Gerer les png et jpg (autre format) --> avec l'extension ??
+
 const Discord = require("discord.js");
 const fs = require('fs');
 
@@ -13,13 +15,19 @@ const PREFIX = "*";
 var file = "";
 var helpmsg = "";
 
+
 fs.readdir("GIF", function(err, folder) {
  
 	for (var i=0; i<folder.length; i++) {
 		const wextend = folder[i];		//wextend = with extend (exemple.gif)
 		file = wextend.split(".");	//file = [exemple, gif]
-		helpmsg += file[0];
-		helpmsg += "	";
+		if (helpmsg == ""){
+			helpmsg += file[0];
+		} else {			
+			helpmsg += "	";
+			helpmsg += file[0];
+		}
+		
 	}
 });
 
@@ -44,7 +52,7 @@ bot.on("ready", function(){
 	bot.user.setActivity("with Kongo's nerves");
 })
 
-bot.on("message", function(message){
+bot.on("message", async function(message){
 	if (message.author.equals(bot.user)) return;
 	let score;
 	
@@ -64,6 +72,9 @@ bot.on("message", function(message){
 			}
 		bot.setScore.run(score);
 	}
+	
+		if (!message.content.startsWith(PREFIX)) return;
+		
 		
 		if (args[0] == "level"){
 			return message.reply(`You currently have ${score.points} points and are level ${score.level}!`);
@@ -72,11 +83,100 @@ bot.on("message", function(message){
 		} else {
 		
 		
-		if (!message.content.startsWith(PREFIX)) return;
-		
 		
 		if (args[0] == "help"){
-				message.channel.send(helpmsg);
+				var helplist = helpmsg.split("	")
+				msgembed = "";
+				currentpage = 1;
+				limit = Math.ceil(helplist.length / 50)
+				var authormenu = message.author.id;
+				var authornick = message.author.username
+				var i = (currentpage - 1) * 50;
+				for(var j=0;j<5; j++){
+					for(var i;i<(j*10)+10; i++){
+						if(helplist[i] != undefined){
+							msgembed += "**" + helplist[i] + "** | ";
+						} else {
+							msgembed += "";
+						}
+					}
+				}
+				message.delete();
+				message.channel.send({
+					"embed": {
+						"title": "Page "+currentpage+"/"+limit+"			" + authornick,
+						"description": "\n" + msgembed,
+						"color": 5536943
+					}
+				}).then(async function (message) {
+						await message.react('⏪');
+						await message.react('⏩');
+						await message.react('❌')
+						.then(() => {
+							const filter = (reaction, user) => reaction.emoji.name === '⏪' || reaction.emoji.name === '❌' || reaction.emoji.name === '⏩' && user.id === authormenu;
+							const collector = message.createReactionCollector(filter);
+							collector.on('collect', function(r){
+								if(r.count > 1){	
+									if (r.emoji.name == '❌'){
+										message.delete();
+									} else if(r.emoji.name == '⏪') {
+										if(currentpage > 1){
+											currentpage--;
+											msgembed = "";
+											var i = (currentpage - 1) * 50;
+											for(var j=0;j<5; j++){
+												for(var i;i<((currentpage -1) *50)+(j*10)+10; i++){
+													if(helplist[i] != undefined){
+														msgembed += "**" + helplist[i] + "** | ";
+													} else {
+														msgembed += "";
+													}
+												}
+												msgembed += "\n";
+											}
+											const newEmbed = new Discord.RichEmbed({
+												title: "Page "+currentpage+"/"+limit+"			" + authornick,
+												description: "\n" + msgembed,
+												"color": 5536943
+											});
+										
+											message.edit(newEmbed)
+											message.reactions.get('⏪').remove(authormenu);
+										} else {
+											message.reactions.get('⏪').remove(authormenu);
+										}
+									}else if(r.emoji.name == '⏩') {
+										if(currentpage < limit){
+											currentpage++;
+											msgembed = "";
+											var i = (currentpage - 1) * 50;
+											for(var j=0;j<5; j++){
+												for(var i;i<((currentpage -1) *50)+(j*10)+10; i++){
+													if(helplist[i] != undefined){
+														msgembed += "**" + helplist[i] + "** | ";
+													} else {
+														msgembed += "";
+													}
+												}
+												msgembed += "\n";
+											}
+											const newEmbed = new Discord.RichEmbed({
+												title: "Page "+currentpage+"/"+limit+"			" + authornick,
+												description: "\n" + msgembed,
+												"color": 5536943
+											});
+										
+											message.edit(newEmbed)
+											message.reactions.get('⏩').remove(authormenu);
+										} else {
+											message.reactions.get('⏩').remove(authormenu);
+										}
+									}
+								}
+							})
+						})
+					
+					})									
 		} else {
 			split = helpmsg.split("	");
 			search = split.find(function(str) { return str == args[0]; });
