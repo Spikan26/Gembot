@@ -2,6 +2,7 @@
 
 const Discord = require("discord.js");
 const fs = require('fs');
+const talkedRecently = new Set();
 
 var bot = new Discord.Client();
 
@@ -64,11 +65,21 @@ bot.on("message", async function(message){
 		if (!score) {
 			score = { id: `${message.guild.id}-${message.author.id}`, user: message.author.id, guild: message.guild.id, points: 0, level: 1 }
 		}
-		score.points++;
+		if (talkedRecently.has(message.author.id)){
+			console.log("Slow down !!");
+		} else {
+			score.points++;
+			// Adds the user to the set so that they can't talk for 2.5 seconds
+			talkedRecently.add(message.author.id);
+			setTimeout(() => {
+				// Removes the user from the set after 2.5 seconds
+				talkedRecently.delete(message.author.id);
+			}, 60000);
+		}
 		const curLevel = Math.floor(0.2 * Math.sqrt(score.points));
 		if(score.level < curLevel) {
 			score.level++;
-			message.reply(`You've leveled up to level **${curLevel}**! Ain't that dandy?`);
+			message.reply(`You've leveled up to level **${curLevel}**! You become harder !`);
 			}
 		bot.setScore.run(score);
 	}
