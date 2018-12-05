@@ -1,4 +1,5 @@
-//TODO Gerer les png et jpg (autre format) --> avec l'extension ??
+//TODO Reset de score
+//TODO Palier de score
 
 const Discord = require("discord.js");
 const fs = require('fs');
@@ -10,23 +11,27 @@ const SQLite = require("better-sqlite3");
 const sql = new SQLite('./scores.sqlite');
 
 
-const PREFIX = "*";
+const PREFIX = "gem.";
 
 
 var file = "";
-var helpmsg = "";
+var image_file = "";
+var image_extend = ""
 
 
 fs.readdir("GIF", function(err, folder) {
  
 	for (var i=0; i<folder.length; i++) {
-		const wextend = folder[i];		//wextend = with extend (exemple.gif)
+		var wextend = folder[i];		//wextend = with extend (exemple.gif)
 		file = wextend.split(".");	//file = [exemple, gif]
-		if (helpmsg == ""){
-			helpmsg += file[0];
+		if (image_file == ""){
+			image_file += file[0];
+			image_extend += wextend;
 		} else {			
-			helpmsg += "	";
-			helpmsg += file[0];
+			image_file += "	";
+			image_file += file[0];
+			image_extend += "	";
+			image_extend += wextend;
 		}
 		
 	}
@@ -66,7 +71,7 @@ bot.on("message", async function(message){
 			score = { id: `${message.guild.id}-${message.author.id}`, user: message.author.id, guild: message.guild.id, points: 0, level: 1 }
 		}
 		if (talkedRecently.has(message.author.id)){
-			console.log("Slow down !!");
+			var non = 1;
 		} else {
 			score.points++;
 			// Adds the user to the set so that they can't talk for 2.5 seconds
@@ -96,7 +101,7 @@ bot.on("message", async function(message){
 		
 		
 		if (args[0] == "help"){
-				var helplist = helpmsg.split("	")
+				var helplist = image_file.split("	")
 				msgembed = "";
 				currentpage = 1;
 				limit = Math.ceil(helplist.length / 50)
@@ -189,13 +194,23 @@ bot.on("message", async function(message){
 					
 					})									
 		} else {
-			split = helpmsg.split("	");
-			search = split.find(function(str) { return str == args[0]; });
-			if (search != undefined){
+			split_extend = image_extend.split("	");
+			
+			split_file = image_file.split("	");
+			search_file = split_file.find(function(str) { return str == args[0]; });
+			if (search_file != undefined){
+				var extend = ""
+				split_extend.forEach(function(element) {
+					var toto = element.slice(0, element.length - 4);
+					if(toto == args[0]){
+						extend = element.slice(toto.length, element.length);
+					}
+				})
+				
 				message.channel.send({
 					files: [{
-						attachment: 'GIF/'+args[0]+'.gif',
-						name: args[0]+'.gif'
+						attachment: 'GIF/'+args[0]+ extend,
+						name: args[0]+ extend
 					}]
 				});
 			}
