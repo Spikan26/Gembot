@@ -63,7 +63,7 @@ bot.on("ready", function(){
 bot.on("message", async function(message){
 	if (message.author.equals(bot.user)) return;
 	if (!message.content.startsWith(ADMIN_PREFIX)) return;
-	console.log("Admin Command");
+	console.log("message.author.id = " + message.author.id);
 	if (message.author.id != "178483636671086592" || message.author.id != "242355725852999683" ) return;
 	console.log("User Check");
 	let score;
