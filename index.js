@@ -12,6 +12,7 @@ const sql = new SQLite('./scores.sqlite');
 
 
 const PREFIX = "gem.";
+const ADMIN_PREFIX = "gem@";
 
 
 var file = "";
@@ -58,6 +59,51 @@ bot.on("ready", function(){
 	bot.user.setActivity("with Kongo's nerves");
 })
 
+///// Admin Use
+bot.on("message", async function(message){
+	if (message.author.equals(bot.user)) return;
+	if (!message.content.startsWith(ADMIN_PREFIX)) return;
+	
+	if (message.author.id != "178483636671086592" || message.author.id != "242355725852999683" ) return;
+	
+	let score;
+	var args = message.content.substring(ADMIN_PREFIX.length).split(" ");
+	score = bot.getScore.get(message.author.id, message.guild.id);
+	
+	switch (args[0].toLowerCase()){
+		
+		case "ping":
+			message.channel.send("I'm alive !");
+			break
+		
+		case "give":
+			const user = message.mentions.users.first() || bot.users.get(args[1]);
+			if(!user) return message.reply("You must mention someone or give their ID!");
+			
+			const pointsToAdd = parseInt(args[2], 10);
+			if(!pointsToAdd) return message.reply("You didn't tell me how many points to give...")
+			
+			// Get their current points.
+			let userscore = bot.getScore.get(user.id, message.guild.id);
+			// It's possible to give points to a user we haven't seen, so we need to initiate defaults here too!
+			if (!userscore) {
+				userscore = { id: `${message.guild.id}-${user.id}`, user: user.id, guild: message.guild.id, points: 0, level: 1 }
+			}
+			userscore.points += pointsToAdd;
+			
+			// We also want to update their level (but we won't notify them if it changes)
+			let userLevel = Math.floor(0.2 * Math.sqrt(score.points));
+			userscore.level = userLevel;
+			
+			// And we save it!
+			bot.setScore.run(userscore);
+			message.channel.send(`${user.tag} has received ${pointsToAdd} points and now stands at ${userscore.points} points.`);
+			break
+	}
+})
+
+
+///// Clasic use 
 bot.on("message", async function(message){
 	if (message.author.equals(bot.user)) return;
 	let score;
@@ -91,16 +137,34 @@ bot.on("message", async function(message){
 	
 		if (!message.content.startsWith(PREFIX)) return;
 		
+		switch (args[0].toLowerCase()){
 		
-		if (args[0] == "level"){
-			return message.reply(`You currently have ${score.points} points and are level ${score.level}!`);
+			case "ping":
+				message.channel.send("You're not an admin, just saying");
+				break
+				
+			case "level":
+				message.reply(`You currently have ${score.points} points and are level ${score.level}!`);
+				break
 			
-		
-		} else {
-		
-		
-		
-		if (args[0] == "help"){
+			case "top":
+				const top10 = sql.prepare("SELECT * FROM scores WHERE guild = ? ORDER BY points DESC LIMIT 10;").all(message.guild.id);
+	 
+				// Now shake it and show it! (as a nice embed, too!)
+				const embed = new Discord.RichEmbed()
+					.setTitle("Leaderboard")
+					.setAuthor(bot.user.username, bot.user.avatarURL)
+					.setDescription("```markdown\n# Our top 10 points leaders!```")
+					.setColor(0x00AE86);
+				 
+				for(const data of top10) {
+					embed.addField(bot.users.get(data.user).tag, `${data.points} points (level ${data.level})`);
+				}
+				
+				message.channel.send({embed});
+				break
+			
+			case "list":
 				var helplist = image_file.split("	")
 				msgembed = "";
 				currentpage = 1;
@@ -193,31 +257,30 @@ bot.on("message", async function(message){
 						})
 					
 					})									
-		} else {
-			split_extend = image_extend.split("	");
-			
-			split_file = image_file.split("	");
-			search_file = split_file.find(function(str) { return str == args[0]; });
-			if (search_file != undefined){
-				var extend = ""
-				split_extend.forEach(function(element) {
-					var toto = element.slice(0, element.length - 4);
-					if(toto == args[0]){
-						extend = element.slice(toto.length, element.length);
-					}
-				})
+				break
 				
-				message.channel.send({
-					files: [{
-						attachment: 'GIF/'+args[0]+ extend,
-						name: args[0]+ extend
-					}]
-				});
-			}
+			default:
+				split_extend = image_extend.split("	");
 			
-			
-		}}
-		
+				split_file = image_file.split("	");
+				search_file = split_file.find(function(str) { return str == args[0]; });
+				if (search_file != undefined){
+					var extend = ""
+					split_extend.forEach(function(element) {
+						var toto = element.slice(0, element.length - 4);
+						if(toto == args[0]){
+							extend = element.slice(toto.length, element.length);
+						}
+					})
+					
+					message.channel.send({
+						files: [{
+							attachment: 'GIF/'+args[0]+ extend,
+							name: args[0]+ extend
+						}]
+					});
+				}				
+		}		
 })
 
 bot.login(process.env.BOT_TOKEN);
