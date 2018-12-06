@@ -12,7 +12,7 @@ const sql = new SQLite('./scores.sqlite');
 
 
 const PREFIX = "gem.";
-const ADMIN_PREFIX = "blup.";
+const ADMIN_PREFIX = "gem@";
 
 
 var file = "";
@@ -63,13 +63,10 @@ bot.on("ready", function(){
 bot.on("message", async function(message){
 	if (message.author.equals(bot.user)) return;
 	if (!message.content.startsWith(ADMIN_PREFIX)) return;
-	console.log("message.author.id = " + message.author.id);
-	if (message.author.id != "178483636671086592" || message.author.id != "242355725852999683" ) return;
-	console.log("User Check");
+	if (message.author.id != "178483636671086592" && message.author.id != "242355725852999683" ) return;
 	let score;
 	var args = message.content.substring(ADMIN_PREFIX.length).split(" ");
 	score = bot.getScore.get(message.author.id, message.guild.id);
-	console.log("split message");
 	switch (args[0].toLowerCase()){
 		
 		case "ping":
