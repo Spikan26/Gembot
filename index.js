@@ -12,7 +12,7 @@ const sql = new SQLite('./scores.sqlite');
 
 
 const PREFIX = "gem.";
-const ADMIN_PREFIX = "gem@";
+const ADMIN_PREFIX = "blup.";
 
 
 var file = "";
