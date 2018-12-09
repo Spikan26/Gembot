@@ -11,7 +11,7 @@ const SQLite = require("better-sqlite3");
 const sql = new SQLite('./scores.sqlite');
 
 
-const PREFIX = "gem.";
+const PREFIX = "*";
 const ADMIN_PREFIX = "gem@";
 
 
